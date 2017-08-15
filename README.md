@@ -92,3 +92,7 @@ except errors.HttpError as err:
       import pickle
       pickle.load(open('prior_boxes_ssd300.pkl', 'rb'))[4332:].dump('prior_boxes_ssd300_min.pkl')
       ```
+
+## Note
+
+In this implementation, the 38 x 38 split default box via the pool 4 layer has been removed. The Google Cloud ML Engine limits the size of the saved model to 256 MB, as using the full default box exceeds the limit. The default box of 38x38 splitting at the size of 300x300 is small and it seems that there is no influence on object detection.
