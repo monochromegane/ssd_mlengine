@@ -27,7 +27,7 @@ $ starchart expose -m ssd_mlengine
 When the prediction API is published,
 
 ```sh
-$ python predict.py
+$ python predict.py -k 1 -c 0.4 -i image.jpg
 # {'predictions': [{'key': '1',
 #    'objects': [[8.0,        # class
 #      0.45196059346199036,   # confidence
@@ -37,13 +37,20 @@ $ python predict.py
 #      315.3045349121094]]}]} # ymax
 ```
 
-The code of `prediction.py` is like the following:
+The code of `predict.py` is like the following:
 
 ```python
+import argparse
 from oauth2client.client import GoogleCredentials
 from googleapiclient import discovery
 from googleapiclient import errors
 from PIL import Image
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-k', '--keep_top_k', type=int, default=10)
+parser.add_argument('-c', '--confidence_threshold', type=float, default=0.8)
+parser.add_argument('-i', '--image', required=True)
+args = parser.parse_args()
 
 project = YOUR_PROJECT_ID
 model   = 'ssd_mlengine'
@@ -53,8 +60,7 @@ credentials = GoogleCredentials.get_application_default()
 ml = discovery.build('ml', 'v1', credentials=credentials)
 
 size = (300, 300)
-image_path = TARGET_IMAGE_PATH
-img = Image.open(image_path)
+img = Image.open(args.image)
 original_size = img.size
 resized_img = img.resize(size)
 
@@ -66,9 +72,9 @@ for i in range(size[1]):
 
 body = {'instances': [{'key': '1',
     'data': data,
-    'keep_top_k': 1,
+    'keep_top_k': args.keep_top_k,
     'original_size': original_size,
-    'confidence_threshold': 0.45
+    'confidence_threshold': args.confidence_threshold
     }]}
 request = ml.projects().predict(name='projects/{}/models/{}/versions/{}'.format(project, model, version), body=body)
 try:
